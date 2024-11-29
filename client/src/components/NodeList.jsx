@@ -1,19 +1,16 @@
 import { Box, Card, CardContent, Grid, List, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
-import { Link, Outlet, useParams } from "react-router-dom";
+import { Link, Outlet, useParams, useLoaderData } from "react-router-dom";
 
 function NodeList() {
   const { noteId } = useParams(); // Lấy noteId từ URL
   const [activeNoteId, setActiveNoteId] = useState(noteId);
+  const data = useLoaderData();
 
   useEffect(() => {
     // Cập nhật activeNoteId khi noteId trong URL thay đổi
     setActiveNoteId(noteId);
   }, [noteId]);
-
-  const folder = {
-    notes: [{ id: "1", content: "<p>Hello world</p>" }],
-  };
 
   return (
     <Grid container height="100%">
@@ -37,7 +34,7 @@ function NodeList() {
             </Box>
           }
         >
-          {folder.notes.map(({ content, id }) => {
+          {data.folder.notes.map(({ content, id }) => {
             return (
               <Link
                 key={id} // Chỉ dùng id làm key

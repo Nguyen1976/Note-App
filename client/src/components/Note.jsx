@@ -7,12 +7,10 @@ import {
 } from "draft-js";
 import { Editor } from "react-draft-wysiwyg";
 import draftToHtml from "draftjs-to-html";
+import { useLoaderData } from "react-router-dom";
 
 function Note() {
-  const note = {
-    id: "999",
-    content: "<p>This is new note</p>",
-  };
+  const { note } = useLoaderData();
 
   const [editorState, setEditorState] = useState(
     () => EditorState.createEmpty() // Đảm bảo sử dụng phương thức hợp lệ
