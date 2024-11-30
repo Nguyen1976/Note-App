@@ -2,6 +2,7 @@
 import { Box, Card, CardContent, List, Typography } from "@mui/material";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import NewFoler from "./NewFoler";
 
 function FolderList({ folders }) {
   const { folderId } = useParams();
@@ -19,10 +20,17 @@ function FolderList({ folders }) {
         overflowY: "auto",
       }}
       subheader={
-        <Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <Typography sx={{ fontWeight: "bold", color: "white" }}>
             Folders
           </Typography>
+          <NewFoler />
         </Box>
       }
     >

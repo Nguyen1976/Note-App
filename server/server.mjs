@@ -5,9 +5,13 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import bodyParser from "body-parser";
 import { expressMiddleware } from "@apollo/server/express4";
 import cors from "cors";
-import fakeData from "./fakeData/index.js";
 import mongoose from "mongoose";
 import "dotenv/config";
+
+import { resolvers } from "./resolvers/index.js";
+import { typeDefs } from "./schemas/index.js";
+import "./firebaseConfig.js";
+import { getAuth } from "firebase-admin/auth";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -20,60 +24,6 @@ const httpServer = http.createServer(app);
 
 // type Subscription {//Khi client muốn update data real time
 // }
-const typeDefs = `#graphql
-  type Folder {
-    id: String,
-    name: String,
-    createdAt: String,
-    author: Author,
-    notes: [Note]
-  }
-
-  type Note {
-    id: String,
-    content: String,
-  }
-
-  type Author {
-    id: String,
-    name: String,
-  }
-
-  type Query {
-    folders: [Folder],
-    folder(folderId: String): Folder,
-    note(noteId: String): Note
-  }
-`;
-const resolvers = {
-  Query: {
-    folders: () => {
-      //trả về all folder
-      return fakeData.folders;
-    },
-    folder: (parent, args) => {
-      //Trả về một folder cụ thể dựa trên folderId được truyền từ client.
-      const folderId = args.folderId;
-      return fakeData.folders.find((folder) => folder.id === folderId);
-    },
-    note: (parent, args) => {
-      const noteId = args.noteId;
-      return fakeData.notes.find((note) => note.id === noteId);
-    },
-  },
-  Folder: {
-    author: (parent, args) => {
-      //giải quyết liên kết giữa Foder và Author
-      // `parent` là đối tượng `Folder` hiện tại, có thể chứa các thông tin khác
-      const authorId = parent.authorId;
-      return fakeData.authors.find((author) => author.id === authorId);
-    },
-    notes: (parent, args) => {
-      return fakeData.notes.filter((note) => note.folderId === parent.id);
-    },
-  },
-};
-//resolver and schema (2 kiến thức cơ bản của graphQL)
 
 //connecy to DB
 const URI = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.cnjf7.mongodb.net/`;
@@ -88,7 +38,41 @@ const server = new ApolloServer({
 
 await server.start(); //để sử dụng await ở ngoài thì file phải có tiền tố là .mjs
 
-app.use(cors(), bodyParser.json(), expressMiddleware(server));
+const authorizationJWT = async (req, res, next) => {
+  const authorizationHeader = req.headers.authorization;
+
+  if (authorizationHeader) {
+    const accessToken = authorizationHeader.split(" ")[1];
+
+    getAuth()
+      .verifyIdToken(accessToken)
+      .then((decodedToken) => {
+        res.locals.uid = decodedToken.uid;
+
+        next();
+      })
+      .catch((error) => {
+        console.error("Invalid token:", error);
+        res.status(403).json({ message: "Forbidden" });
+      });
+  } else {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
+app.use(
+  cors(),
+  authorizationJWT,
+  bodyParser.json(),
+  expressMiddleware(server, {
+    context: async ({ req, res }) => {
+      return { uid: res.locals.uid };
+    },
+  })
+);
+//res.locals chỉ tồn tại trong 1 vòng đời của req
+//tham số thứ 2 expressMiddleware là context để có thể chia sẻ cho resolver
+// resolver nhận vào context ở tham số thứ 3
 
 mongoose.set("strictQuery", false);
 mongoose.connect(URI).then(async () => {

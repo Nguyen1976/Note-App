@@ -1,10 +1,9 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 
 /* eslint-disable react/prop-types */
 function ProtectedRoute() {
-  const navigate = useNavigate();
   if (!localStorage.getItem("accessToken")) {
-    navigate("/login");
+    return <Navigate to={'/login'} />
   }
   return (
     <>
