@@ -31,7 +31,7 @@ const httpServer = http.createServer(app);
 //connecy to DB
 const URI = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.cnjf7.mongodb.net/`;
 
-const PORT = process.env.PORT || 4000;
+const port = process.env.PORT || 4000;
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
@@ -106,6 +106,6 @@ app.use(
 mongoose.set("strictQuery", false);
 mongoose.connect(URI).then(async () => {
   console.log("Connected to MongoDB");
-  await new Promise((resolve) => httpServer.listen({ port: PORT }, resolve));
-  console.log("Server listening on port 4000");
+  await new Promise((resolve) => httpServer.listen({ port: port }, resolve));
+  console.log(`Server listening on port ${port}`);
 });
