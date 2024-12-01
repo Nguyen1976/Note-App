@@ -26,10 +26,20 @@ export const typeDefs = `#graphql
     note(noteId: String): Note
   }
 
+  type Message {
+    message: String,
+  }
+
   type Mutation {
     addFolder(name: String):  Folder,
     addNote(content: String!, folderId: ID!): Note,
     updateNote(id: String!, content: String!): Note,
     register(uid: String!, name: String!): Author,
+    pushNotification(content: String!): Message
+  }
+
+  type Subscription {
+    folderCreated: Message,
+    notification: Message
   }
 `;
