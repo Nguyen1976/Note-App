@@ -6,7 +6,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import ErrorPage from "../pages/ErrorPage";
 import NodeList from "../components/NodeList";
 import Note from "../components/Note";
-import { noteLoader, notesLoader } from "../utils/noteUtils";
+import { addNewNote, noteLoader, notesLoader, updateNote } from "../utils/noteUtils";
 import { foldersLoader } from "../utils/folderUtils";
 
 // AuthLayout sẽ bao bọc các trang con (Login, Home)
@@ -41,12 +41,14 @@ const router = createBrowserRouter([
               {
                 element: <NodeList />,
                 path: `folders/:folderId`,
+                action: addNewNote,
                 loader: notesLoader,
                 children: [
                   {
                     element: <Note />,
                     path: `note/:noteId`,
                     loader: noteLoader,
+                    action: updateNote,
                   },
                 ],
               },

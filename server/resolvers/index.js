@@ -1,8 +1,18 @@
-import fakeData from "../fakeData/index.js";
+import { GraphQLScalarType } from "graphql";
+import NoteModel from "../models/NoteModel.js";
 import FolderModel from "../models/FolderModel.js";
 import AuthorModel from "../models/AuthorModel.js";
 
 export const resolvers = {
+  Date: new GraphQLScalarType({
+    name: "Date",
+    parseValue(value) {
+      return new Date(value);
+    },
+    serialize(value) {
+      return value.toISOString();
+    },
+  }),
   Query: {
     folders: async (parent, args, context) => {
       const folders = await FolderModel.find({
@@ -16,12 +26,13 @@ export const resolvers = {
     folder: async (parent, args) => {
       //Trả về một folder cụ thể dựa trên folderId được truyền từ client.
       const folderId = args.folderId;
-      const folder = await FolderModel.findOne({ _id: folderId });
+      const folder = await FolderModel.findById(folderId);
       return folder;
     },
-    note: (parent, args) => {
+    note: async (parent, args) => {
       const noteId = args.noteId;
-      return fakeData.notes.find((note) => note.id === noteId);
+      const note = await NoteModel.findById(noteId);
+      return note;
     },
   },
   Folder: {
@@ -32,12 +43,24 @@ export const resolvers = {
       const author = await AuthorModel.findOne({ uid: authorId });
       return author;
     },
-    notes: (parent, args) => {
-      return fakeData.notes.filter((note) => note.folderId === parent.id);
+    notes: async (parent, args) => {
+      const notes = await NoteModel.find({ folderId: parent.id }).sort({
+        updatedAt: "desc",
+      });
+      return notes;
     },
   },
   Mutation: {
-    
+    addNote: async (parent, args) => {
+      const newNote = new NoteModel(args);
+      await newNote.save();
+      return newNote;
+    },
+    updateNote: async (parent, args) => {
+      const noteId = args.id;
+      const note = await NoteModel.findByIdAndUpdate(noteId, args);
+      return note;
+    },
     addFolder: async (parent, args, context) => {
       const newFolder = new FolderModel({ ...args, authorId: context.uid });
       await newFolder.save();
